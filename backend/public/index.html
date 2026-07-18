@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NyayaSetu - Wage Theft RAG Diagnostic Portal</title>
+  <!-- Google Fonts Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --bg-card: rgba(30, 41, 59, 0.4);
+      --border-card: rgba(255, 255, 255, 0.08);
+      --glow-orange: rgba(249, 115, 22, 0.15);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #f97316;
+      --primary-hover: #ea580c;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(249, 115, 22, 0.05) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      overflow-x: hidden;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      max-width: 800px;
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffedd5 0%, var(--primary) 50%, #f43f5e 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.025em;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      font-weight: 400;
+    }
+
+    main {
+      width: 100%;
+      max-width: 1100px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-card);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .card:hover {
+      border-color: rgba(249, 115, 22, 0.25);
+      box-shadow: 0 15px 35px rgba(249, 115, 22, 0.05);
+    }
+
+    h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.4rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-card);
+      border-radius: 10px;
+      padding: 1rem;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 0.95rem;
+      resize: none;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
+    }
+
+    .btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+      border: none;
+      border-radius: 10px;
+      padding: 1rem;
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: all 0.2s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(249, 115, 22, 0.4);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .presets-container {
+      margin-top: 1.5rem;
+    }
+
+    .preset-title {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .preset-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-card);
+      color: var(--text-main);
+      padding: 0.5rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .preset-btn:hover {
+      background: rgba(249, 115, 22, 0.15);
+      border-color: var(--primary);
+    }
+
+    .result-section {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.5s ease;
+    }
+
+    .result-section.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .placeholder-text {
+      color: var(--text-muted);
+      text-align: center;
+      padding: 4rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 30px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      align-self: flex-start;
+    }
+
+    .status-red {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--accent-red);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .status-green {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .metric-card {
+      background: rgba(15, 23, 42, 0.4);
+      border: 1px solid var(--border-card);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    .metric-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .metric-val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-top: 0.2rem;
+    }
+
+    .violation-list {
+      list-style-type: none;
+    }
+
+    .violation-item {
+      position: relative;
+      padding-left: 1.5rem;
+      margin-bottom: 0.6rem;
+      font-size: 0.9rem;
+      color: #ffb0b0;
+    }
+
+    .violation-item::before {
+      content: '⚠️';
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+
+    .whatsapp-preview {
+      background: #075e54;
+      border-radius: 10px;
+      padding: 1rem;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #e4e4e4;
+      border-left: 4px solid #128c7e;
+      position: relative;
+    }
+
+    .whatsapp-badge {
+      position: absolute;
+      top: -10px;
+      right: 15px;
+      background: #128c7e;
+      color: white;
+      font-size: 0.7rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .json-explorer {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-card);
+      padding: 1rem;
+      border-radius: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.8rem;
+      color: #a7f3d0;
+    }
+
+    /* Spinner Animation */
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 0.8s ease-in-out infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>NYAYASETU</h1>
+    <p>Statutory Case Grounding & Wage Theft Rule Engine Diagnostic Portal</p>
+  </header>
+
+  <main>
+    <!-- Left Panel: Input & Settings -->
+    <div class="card">
+      <h2>Case Details Input</h2>
+      <textarea id="workerInput" placeholder="Describe the labor scenario. E.g., 'I am a basic helper at a site in Delhi. I was forced to work 12 hours shifts last week, but the sub-contractor only paid me 450 rupees daily.'"></textarea>
+      
+      <button class="btn" id="analyzeBtn" onclick="analyzeCase()">
+        <span class="spinner" id="btnSpinner"></span>
+        <span id="btnText">Trigger Analytical Pipeline</span>
+      </button>
+
+      <div class="presets-container">
+        <div class="preset-title">Diagnostic Test Scenarios</div>
+        <button class="preset-btn" onclick="applyPreset(1)">Unskilled Wage Theft (Delhi)</button>
+        <button class="preset-btn" onclick="applyPreset(2)">Semi-Skilled Long Shift (Delhi)</button>
+        <button class="preset-btn" onclick="applyPreset(3)">Skilled Compliant Worker</button>
+      </div>
+    </div>
+
+    <!-- Right Panel: Results & Grounding -->
+    <div class="card" style="display: flex; flex-direction: column; justify-content: flex-start; min-height: 450px;">
+      <h2>Orchestration Analysis Results</h2>
+      
+      <div class="placeholder-text" id="resultPlaceholder">
+        <div style="font-size: 3rem;">⚖️</div>
+        <div>Submit worker description on the left to verify the 4-Step RAG & Rule Engine pipeline results.</div>
+      </div>
+
+      <div class="result-section" id="resultContent">
+        <!-- Status Badge -->
+        <div id="statusBadge" class="status-badge">RED_ALERT_VIOLATION</div>
+
+        <!-- Metric Grid -->
+        <div class="metric-grid">
+          <div class="metric-card">
+            <div class="metric-label">Rightful statutory payout</div>
+            <div class="metric-val" id="valRightful">₹0.00</div>
+          </div>
+          <div class="metric-card" style="border-color: rgba(239, 68, 68, 0.2);">
+            <div class="metric-label" style="color: #fda4af;">Shortfall (Wage Theft)</div>
+            <div class="metric-val" style="color: var(--accent-red);" id="valTheft">₹0.00</div>
+          </div>
+        </div>
+
+        <!-- Entity Extraction JSON -->
+        <div>
+          <div class="preset-title" style="margin-bottom: 0.3rem;">Step A: Extracted Entity Map (Gemini)</div>
+          <pre class="json-explorer" id="extractedJson">{}</pre>
+        </div>
+
+        <!-- Violations log -->
+        <div id="violationsContainer">
+          <div class="preset-title" style="margin-bottom: 0.3rem;">Statutory Violation Detections</div>
+          <ul class="violation-list" id="violationList">
+            <!-- Populated via script -->
+          </ul>
+        </div>
+
+        <!-- WhatsApp Layout -->
+        <div>
+          <div class="preset-title" style="margin-bottom: 0.3rem;">Step D: WhatsApp Alert Context</div>
+          <div class="whatsapp-preview">
+            <span class="whatsapp-badge">WhatsApp API Webhook</span>
+            <div id="whatsappText">Generating Alert...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const presets = {
+      1: "I am a basic unskilled builder at a metro site in Delhi. The contractor has been making me work 12 hours every day, but at the end of the week he only distributed 450 rupees for my daily wages. I need help.",
+      2: "I worked as a machine operator helper (semi-skilled labor) in Delhi for 10 hours daily. They gave me 800 rupees in total, but I didn't get any extra pay for the long hours worked.",
+      3: "I am a chief electrician (skilled worker) in Delhi. I did my regular 8 hour shift yesterday and was paid my full rightful amount of 900 rupees."
+    };
+
+    function applyPreset(id) {
+      document.getElementById('workerInput').value = presets[id];
+    }
+
+    async function analyzeCase() {
+      const workerInput = document.getElementById('workerInput').value.trim();
+      if (!workerInput) {
+        alert('Please fill in the worker input description or select a test scenario preset.');
+        return;
+      }
+
+      // UI state transition
+      const btn = document.getElementById('analyzeBtn');
+      const spinner = document.getElementById('btnSpinner');
+      const btnText = document.getElementById('btnText');
+      const placeholder = document.getElementById('resultPlaceholder');
+      const content = document.getElementById('resultContent');
+
+      btn.disabled = true;
+      spinner.style.display = 'inline-block';
+      btnText.innerText = 'Orchestrating...';
+
+      try {
+        const response = await fetch('/api/analyze-case', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ workerInput })
+        });
+
+        const data = await response.json();
+        
+        if (!data.success) {
+          throw new Error(data.error || 'Unknown analysis error.');
+        }
+
+        // Render response data
+        placeholder.style.display = 'none';
+        content.classList.add('active');
+
+        // Status
+        const badge = document.getElementById('statusBadge');
+        badge.innerText = data.assessment.status;
+        if (data.assessment.status === 'RED_ALERT_VIOLATION') {
+          badge.className = 'status-badge status-red';
+        } else {
+          badge.className = 'status-badge status-green';
+        }
+
+        // Metrics
+        document.getElementById('valRightful').innerText = `₹${data.assessment.rightfulCompensation}`;
+        document.getElementById('valTheft').innerText = `₹${data.assessment.theftAmount}`;
+
+        // Step A JSON
+        document.getElementById('extractedJson').innerText = JSON.stringify(data.extractedData, null, 2);
+
+        // Violations
+        const list = document.getElementById('violationList');
+        list.innerHTML = '';
+        if (data.assessment.violationsLog.length === 0) {
+          const li = document.createElement('li');
+          li.style.color = 'var(--accent-green)';
+          li.style.paddingLeft = '0';
+          li.innerText = '✅ Statutory Compliance verified. No underpayment or overtime theft detected.';
+          list.appendChild(li);
+        } else {
+          data.assessment.violationsLog.forEach(v => {
+            const li = document.createElement('li');
+            li.className = 'violation-item';
+            li.innerText = v;
+            list.appendChild(li);
+          });
+        }
+
+        // WhatsApp template
+        document.getElementById('whatsappText').innerText = data.assessment.automatedMessage;
+
+      } catch (err) {
+        console.error(err);
+        alert('Case analysis processing failed: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        spinner.style.display = 'none';
+        btnText.innerText = 'Trigger Analytical Pipeline';
+      }
+    }
+  </script>
+</body>
+</html>
